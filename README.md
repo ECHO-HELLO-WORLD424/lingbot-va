@@ -55,16 +55,7 @@ https://github.com/user-attachments/assets/cec7b7a6-953b-4fa4-8f1a-47efc1fce547
 # 🛠️ Quick Start
 
 ## Installation
-**Requirements**
- • Python == 3.10.16
- • Pytorch == 2.9.0
- • CUDA 12.6
-
-```bash
-pip install torch==2.9.0 torchvision==0.24.0 torchaudio==2.9.0 --index-url https://download.pytorch.org/whl/cu126
-pip install websockets einops diffusers==0.36.0 transformers==4.55.2 accelerate msgpack opencv-python matplotlib ftfy easydict
-pip install flash-attn --no-build-isolation
-```
+️Refer to [setup instructions](./SETUP.md)
 
 
 ## ⚠️ Important: `attn_mode` Configuration
