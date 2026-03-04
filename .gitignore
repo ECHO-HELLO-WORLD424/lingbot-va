@@ -7,3 +7,4 @@ robotwin
 /.idea/
 __pycache__/
 *.py[cod]
+/train_out/
