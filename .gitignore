@@ -1,6 +1,6 @@
 /pids.txt
-/models/
-/robotwin/
+models
+robotwin
 /logs/
 /results/
 /visualization/
