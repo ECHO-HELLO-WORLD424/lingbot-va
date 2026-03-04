@@ -3,6 +3,9 @@ MASTER_PORT=${MASTER_PORT:-29661}
 LOG_DIR='./logs'
 mkdir -p $LOG_DIR
 
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+PYTHON="${REPO_ROOT}/.venv/bin/python"
+
 save_root='./visualization/'
 mkdir -p $save_root
 
@@ -17,7 +20,7 @@ for i in {0..7}; do
     echo "[Task ${j}] GPU: ${i} | PORT: ${CURRENT_PORT} | MASTER_PORT: ${CURRENT_MASTER_PORT} | Log: ${LOG_FILE}"
 
     CUDA_VISIBLE_DEVICES=$i  \
-    nohup python -m torch.distributed.run \
+    nohup "$PYTHON" -m torch.distributed.run \
         --nproc_per_node 1 \
         --master_port $CURRENT_MASTER_PORT \
         wan_va/wan_va_server.py \

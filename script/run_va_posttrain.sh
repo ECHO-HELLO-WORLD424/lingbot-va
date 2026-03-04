@@ -3,6 +3,9 @@
 set -x
 
 umask 007
+
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+PYTHON="${REPO_ROOT}/.venv/bin/python"
  
 NGPU=${NGPU:-"8"}
 MASTER_PORT=${MASTER_PORT:-"29501"}
@@ -31,7 +34,7 @@ config_name=${CONFIG_NAME}
 ## cmd setting
 export TOKENIZERS_PARALLELISM=false
 PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True" TORCHFT_LIGHTHOUSE=${torchft_lighthouse} \
-python -m torch.distributed.run \
+"$PYTHON" -m torch.distributed.run \
     --nproc_per_node=${num_gpu} \
     --local-ranks-filter=${log_rank} \
     --master_port ${master_port} \

@@ -13,7 +13,12 @@ class WebsocketClientPolicy:
     See WebsocketPolicyServer for a corresponding server implementation.
     """
 
-    def __init__(self, host: str = "0.0.0.0", port: Optional[int] = None, api_key: Optional[str] = None) -> None:
+    def __init__(
+        self,
+        host: str = "127.0.0.1",
+        port: Optional[int] = None,
+        api_key: Optional[str] = None,
+    ) -> None:
         self._uri = f"ws://{host}"
         if port is not None:
             self._uri += f":{port}"
@@ -42,15 +47,19 @@ class WebsocketClientPolicy:
         logging.info(f"Waiting for server at {self._uri}...")
         while True:
             try:
-                headers = {"Authorization": f"Api-Key {self._api_key}"} if self._api_key else None
+                headers = (
+                    {"Authorization": f"Api-Key {self._api_key}"}
+                    if self._api_key
+                    else None
+                )
                 # 禁用 ping 机制，防止推理时间过长导致超时
                 conn = websockets.sync.client.connect(
-                    self._uri, 
-                    compression=None, 
-                    max_size=None, 
+                    self._uri,
+                    compression=None,
+                    max_size=None,
                     additional_headers=headers,
-                    ping_interval=None, 
-                    close_timeout=10
+                    ping_interval=None,
+                    close_timeout=10,
                 )
                 metadata = unpackb(conn.recv())
                 return conn, metadata
@@ -72,17 +81,19 @@ class WebsocketClientPolicy:
     def reset(self) -> None:
         pass
 
+
 if __name__ == "__main__":
     policy_on_device = WebsocketClientPolicy(port=8000)
     import torch
     import numpy as np
     from PIL import Image
     from .image_tools import convert_to_uint8
+
     device = torch.device("cuda")
 
     base_0_rgb = np.random.randint(0, 256, size=(1, 3, 224, 224), dtype=np.uint8)
     left_wrist_0_rgb = np.random.randint(0, 256, size=(1, 3, 224, 224), dtype=np.uint8)
-    state = np.random.rand(1,8).astype(np.float32)
+    state = np.random.rand(1, 8).astype(np.float32)
     prompt = ["do something"]
 
     # observation = {
@@ -105,4 +116,6 @@ if __name__ == "__main__":
     }
 
     policy_on_device.infer(observation)
-    from IPython import embed;embed()
+    from IPython import embed
+
+    embed()

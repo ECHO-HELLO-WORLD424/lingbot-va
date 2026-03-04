@@ -1,6 +1,9 @@
 #!/bin/bash
 export LD_LIBRARY_PATH=/usr/lib64:/usr/lib:$LD_LIBRARY_PATH
 
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+PYTHON="${REPO_ROOT}/.venv/bin/python"
+
 task_groups=(
   "stack_bowls_three handover_block hanging_mug scan_object lift_pot put_object_cabinet stack_blocks_three place_shoe"
   "adjust_bottle place_mouse_pad dump_bin_bigbin move_pillbottle_pad pick_dual_bottles shake_bottle place_fan turn_switch"
@@ -22,7 +25,7 @@ seed=0
 PORT=29056
 
 PYTHONWARNINGS=ignore::UserWarning \
-XLA_PYTHON_CLIENT_MEM_FRACTION=0.9 python -m evaluation.robotwin.eval_polict_client_openpi --config policy/$policy_name/deploy_policy.yml \
+XLA_PYTHON_CLIENT_MEM_FRACTION=0.9 "$PYTHON" -m evaluation.robotwin.eval_polict_client_openpi --config policy/$policy_name/deploy_policy.yml \
     --overrides \
     --task_name ${task_name} \
     --task_config ${task_config} \
