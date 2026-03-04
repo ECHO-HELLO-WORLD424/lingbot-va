@@ -75,6 +75,7 @@ Now, create a virtual env with uv **in the RoboTwin repo**, follow the below set
    ```bash
    uv pip install "git+https://github.com/facebookresearch/pytorch3d.git@stable" --no-build-isolation
    ```
+> **Slow build:** `pytorch3d` can take from 30 minutes to 1h to build on RTX-4090 + i7-14700KF
 
 3. run:
    
@@ -117,6 +118,8 @@ uv pip install websockets einops diffusers==0.36.0 transformers==4.55.2 \
 
 uv pip install flash-attn --no-build-isolation
 ```
+
+> **Slow build:** `flash-attn` can take from 60min to 90min to build on RTX-4090 + i7-14700KF
 
 ---
 
@@ -181,10 +184,7 @@ uv pip install -e . --no-build-isolation
 cd ../../..
 ```
 
-> **Compilation time:** cuRobo compiles CUDA kernels and takes several minutes depending on
-> your GPU. Additionally, on **first run** cuRobo performs a `warmup()` call that JIT-compiles
-> further CUDA kernels. This causes the client to appear frozen for several minutes after
-> printing the config block — this is normal. Do not interrupt it.
+> **Slow build:** cuRobo takes about 30min to build on RTX-4090 + i7-14700KF 
 
 ---
 
@@ -258,6 +258,10 @@ bash evaluation/robotwin/launch_client.sh ${save_root} ${task_name}
 
 Replace `adjust_bottle` with any of the 50 RoboTwin task names. Results (per-episode videos
 and JSON success metrics) are saved under `robotwin/${save_root}`.
+
+> **Slow warmup** on **first run** cuRobo performs a `warmup()` call that JIT-compiles
+> further CUDA kernels. This causes the client to appear frozen for around 10 minutes after
+> printing the config block — this is normal. Do not interrupt it.
 
 > **Note:** An `eval_result/` folder is also created inside the RoboTwin directory — this is
 > native RoboTwin output and duplicates the contents of `results/`. It can be ignored.
