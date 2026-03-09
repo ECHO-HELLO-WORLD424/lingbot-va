@@ -8,3 +8,4 @@ robotwin
 __pycache__/
 *.py[cod]
 /train_out/
+/eval_starting_images/
