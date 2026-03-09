@@ -182,6 +182,49 @@ NGPU=1 CONFIG_NAME='robotwin_i2av' bash script/run_launch_va_server_sync.sh
 
 > **GPU Memory Requirements**: Approximately **18GB VRAM** for single-GPU i2av inference with offload mode enabled (VAE and text_encoder offloaded to CPU).
 
+### Arm-Distinction Instruction-Following Evaluation
+
+This evaluation tests whether the model can follow fine-grained instructions that differ only in which arm (left vs right) the robot should use. Given the same starting image, the model is asked to generate a video-action sequence twice: once with a "use the left arm" instruction and once with "use the right arm".
+
+**Step 1: Generate starting images from RoboTwin**
+
+This renders 50 scenes from the `place_a2b_left` / `place_a2b_right` tasks and pairs each with two instruction variants that differ only in arm choice.
+
+```bash
+# Requires RoboTwin to be installed (see "Evaluation on RoboTwin-2.0" above)
+.venv/bin/python scripts/generate_starting_images.py --num-samples 50
+```
+
+Output lands in `eval_starting_images/` with one subdirectory per sample, each containing the 3 camera PNGs and a `metadata.json` with the two instruction variants. Use `--help` for additional options.
+
+**Step 2: Run batch i2va evaluation**
+
+This loads the model once and iterates through all samples, generating a video for each arm variant.
+
+```bash
+NGPU=1 bash scripts/run_arm_eval.sh \
+    --input-dir eval_starting_images \
+    --save-root train_out/arm_eval
+```
+
+For multi-GPU:
+```bash
+NGPU=4 bash scripts/run_arm_eval.sh \
+    --input-dir eval_starting_images \
+    --save-root train_out/arm_eval
+```
+
+Use `--start-idx` / `--end-idx` to resume or process a subset. Already-generated samples are automatically skipped.
+
+Results are saved under `train_out/arm_eval/` with the structure:
+```
+sample_XXX/
+    left_arm/video.mp4, actions.npy
+    right_arm/video.mp4, actions.npy
+```
+
+A summary `eval_results.json` is written at the end.
+
 
 ## Post-Training LingBot-VA
 

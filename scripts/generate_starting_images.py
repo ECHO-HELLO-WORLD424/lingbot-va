@@ -3,6 +3,8 @@ Generate starting images from RoboTwin simulator for instruction-following evalu
 
 Uses place_a2b_left and place_a2b_right tasks to produce 50 starting-image sets,
 each paired with a left-arm and right-arm text instruction variant.
+The two instructions differ ONLY in which arm the robot should use, while the
+spatial goal (place left/right of B) stays the same.
 
 Output structure:
     {output_dir}/
@@ -10,7 +12,7 @@ Output structure:
             observation.images.cam_high.png
             observation.images.cam_left_wrist.png
             observation.images.cam_right_wrist.png
-            metadata.json   # seed, task, instruction_left, instruction_right
+            metadata.json   # seed, task, instruction_left_arm, instruction_right_arm
 """
 
 import sys
@@ -104,11 +106,12 @@ def save_obs_images(obs: dict, save_dir: Path):
 
 
 def generate_instruction_pair(task_name: str, episode_info: dict):
-    """Generate a (left_instruction, right_instruction) pair for this scene.
+    """Generate a (left_arm_instruction, right_arm_instruction) pair.
 
-    We use the RoboTwin description system to produce a natural instruction
-    for the *actual* task, then produce the contrastive version by swapping
-    'left' <-> 'right' in both the task template and the arm placeholder.
+    Both instructions describe the SAME spatial goal (e.g. "place A to the
+    left of B") but differ ONLY in which arm the robot should use.  This
+    isolates arm-choice as the single variable for instruction-following
+    evaluation.
     """
     episode_info_list = [episode_info]
     results = generate_episode_descriptions(task_name, episode_info_list, 100)
@@ -119,31 +122,40 @@ def generate_instruction_pair(task_name: str, episode_info: dict):
     if not all_instructions:
         return None, None
 
-    instruction = random.choice(all_instructions)
+    # Pick an instruction that already mentions an arm (has {a} filled in).
+    # Filter for ones containing "left arm" or "right arm".
+    arm_instructions = [
+        i for i in all_instructions
+        if "left arm" in i.lower() or "right arm" in i.lower()
+    ]
+    if not arm_instructions:
+        # Fallback: pick any instruction and prepend arm prefix
+        base = random.choice(all_instructions)
+        left_arm_instr = f"Use the left arm. {base}"
+        right_arm_instr = f"Use the right arm. {base}"
+        return left_arm_instr, right_arm_instr
 
-    if task_name == "place_a2b_left":
-        left_instruction = instruction  # already says "left"
-        right_instruction = swap_left_right(instruction)
-    elif task_name == "place_a2b_right":
-        right_instruction = instruction  # already says "right"
-        left_instruction = swap_left_right(instruction)
-    else:
-        left_instruction = instruction
-        right_instruction = swap_left_right(instruction)
+    instruction = random.choice(arm_instructions)
 
-    return left_instruction, right_instruction
+    # Replace ONLY the arm reference, not spatial "left"/"right" directions
+    left_arm_instr = swap_arm_only(instruction, target_arm="left")
+    right_arm_instr = swap_arm_only(instruction, target_arm="right")
+
+    return left_arm_instr, right_arm_instr
 
 
-def swap_left_right(text: str) -> str:
-    """Swap 'left' and 'right' in text (case-preserving)."""
-    placeholder = "\x00PLACEHOLDER\x00"
-    text = text.replace("left", placeholder)
-    text = text.replace("right", "left")
-    text = text.replace(placeholder, "right")
-    text = text.replace("Left", placeholder)
-    text = text.replace("Right", "Left")
-    text = text.replace(placeholder, "Right")
-    return text
+def swap_arm_only(text: str, target_arm: str) -> str:
+    """Replace 'the left arm' / 'the right arm' with 'the {target_arm} arm'.
+
+    Only touches the arm reference, leaving spatial directions intact.
+    """
+    import re
+    return re.sub(
+        r'\bthe (left|right) arm\b',
+        f'the {target_arm} arm',
+        text,
+        flags=re.IGNORECASE,
+    )
 
 
 def find_valid_seeds(task_env, task_name: str, args: dict,
@@ -263,16 +275,16 @@ def main():
                 "seed": seed,
                 "task_name": task_name,
                 "episode_info": episode_info,
-                "instruction_left": left_instr,
-                "instruction_right": right_instr,
+                "instruction_left_arm": left_instr,
+                "instruction_right_arm": right_instr,
             }
             with open(sample_dir / "metadata.json", "w") as f:
                 json.dump(metadata, f, indent=2, ensure_ascii=False)
 
             manifest.append(metadata)
             print(f"  sample_{sample_idx:03d}: seed={seed}  "
-                  f"L=\"{left_instr[:60]}...\"  "
-                  f"R=\"{right_instr[:60]}...\"")
+                  f"L_arm=\"{left_instr[:60]}...\"  "
+                  f"R_arm=\"{right_instr[:60]}...\"")
             sample_idx += 1
 
     # Write manifest
