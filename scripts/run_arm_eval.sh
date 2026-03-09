@@ -2,7 +2,10 @@
 # Run batch arm-distinction evaluation via i2va.
 #
 # Usage:
-#   NGPU=1 bash scripts/run_arm_eval.sh [--input-dir eval_starting_images] [--save-root train_out/arm_eval] [extra args...]
+#   NGPU=1 bash scripts/run_arm_eval.sh [--input-dir eval_starting_images] [--save-root train_out/arm_eval] [--offload false] [extra args...]
+#
+# --offload true  (default) offloads VAE/text-encoder to CPU to conserve VRAM.
+# --offload false keeps all model components on GPU; use this on VRAM-rich clusters.
 #
 # Must be run from the lingbot-va repo root.
 
