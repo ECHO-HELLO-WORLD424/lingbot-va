@@ -27,6 +27,7 @@ task_groups=(
   "stack_bowls_two place_a2b_right stamp_seal place_object_basket handover_mic place_bread_skillet stack_blocks_two place_cans_plasticbox"
   "click_alarmclock blocks_ranking_size place_phone_stand place_can_basket place_object_scale place_a2b_left grab_roller place_dual_shoes"
   "place_empty_cup blocks_ranking_rgb place_empty_cup blocks_ranking_rgb place_empty_cup blocks_ranking_rgb place_empty_cup blocks_ranking_rgb"
+  "handover_then_place_phone_stand stack_then_scan shake_then_place_bottle rotate_qrcode_then_scan open_laptop_then_place_object_inside dump_bin_then_sort_by_color press_stapler_while_holding unpack_then_rank place_dual_shoes_then_hang_mug fill_then_shake_then_move_to_pot"
 )
 
 if (( task_list_id < 0 || task_list_id >= ${#task_groups[@]} )); then
