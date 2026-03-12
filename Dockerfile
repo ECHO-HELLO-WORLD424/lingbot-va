@@ -123,7 +123,7 @@ RUN sed -i -E \
     's/(if np.linalg.norm\(delta_twist\) < 1e-4 )(or collide )(or not within_joint_limit:)/\1\3/g' \
     /usr/local/lib/python3.10/dist-packages/mplib/planner.py
 
-# Patch cv2: comment out broken LayerId line in typing/__init__.py (line 169)
+# Patch cv2: comment out broken LayerId line in typing/__init__.py (line 162)
 RUN sed -i '162s/^/# /' \
     /usr/local/lib/python3.10/dist-packages/cv2/typing/__init__.py
 
