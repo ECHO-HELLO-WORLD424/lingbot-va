@@ -20,7 +20,7 @@ for i in {0..7}; do
     echo "[Task ${j}] GPU: ${i} | PORT: ${CURRENT_PORT} | MASTER_PORT: ${CURRENT_MASTER_PORT} | Log: ${LOG_FILE}"
 
     CUDA_VISIBLE_DEVICES=$i  \
-    nohup "$PYTHON" -m torch.distributed.run \
+    nohup python -m torch.distributed.run \
         --nproc_per_node 1 \
         --master_port $CURRENT_MASTER_PORT \
         wan_va/wan_va_server.py \

@@ -55,7 +55,8 @@ https://github.com/user-attachments/assets/cec7b7a6-953b-4fa4-8f1a-47efc1fce547
 # 🛠️ Quick Start
 
 ## Installation
-️Refer to [setup instructions](./SETUP.md)
+️Refer to [setup instructions with docker](./doc/SETUP_DOCKER.md)
+> Note: the dependency of this project is extremely tricky. It is recommended to use docker. 
 
 
 ## ⚠️ Important: `attn_mode` Configuration

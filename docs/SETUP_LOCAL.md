@@ -1,8 +1,11 @@
-# LingBot-VA Setup Guide (uv, RoboTwin Inference)
+# LingBot-VA Setup Guide (uv, Potentially Tricky)
 
 This guide documents the full setup process for running LingBot-VA inference with RoboTwin 2.0
 using a **uv-managed virtual environment**. The original README omits several non-obvious steps
 that are required to get the system working. Follow this guide in order.
+
+> If you want to use docker, refer to [docker setup guide](./SETUP_DOCKER.md)
+> Note: Since you are in a venv you need to replace all `python ...` command in the shell scripts to `.venv/bin/python
 
 ---
 

@@ -7,7 +7,7 @@ PYTHON="${REPO_ROOT}/.venv/bin/python"
 save_root='visualization/'
 mkdir -p $save_root
 
-"$PYTHON" -m torch.distributed.run \
+python -m torch.distributed.run \
     --nproc_per_node 1 \
     --master_port $MASTER_PORT \
     wan_va/wan_va_server.py \
