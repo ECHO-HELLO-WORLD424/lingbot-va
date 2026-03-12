@@ -53,3 +53,10 @@ Try re-install curobo. If this does not work, delete `/path/to/RoboTwin/envs/cur
 ```bash
 pip install -e . --no-build-isolation
 ```
+
+### Hard Coded Path in RoboTwin installation
+If you migrate your local project to cloud by simplifying copy it, you will probably see file not found errors when using RoboTwin. 
+This is intended behavior of RoboTwin, you should fix the path everytime you move the RoboTwin codebase to a new environment by running:
+```bash
+python /path/to/RoboTwin/script/update_embodiment_config_path.py
+```
