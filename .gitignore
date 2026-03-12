@@ -1,6 +1,6 @@
 /pids.txt
 models
-/logs/
+/logs*/
 /results/
 /visualization/
 /.idea/

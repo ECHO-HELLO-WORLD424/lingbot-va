@@ -13,9 +13,9 @@ replacements (`handover_then_hang_mug`, `click_bell_then_sort_blocks`, `stamp_th
 
 These tasks are quite abnormal and produces huge amount of error log on evaluation. There are two types of failure pattern:
 
-- **Can have occasional solvable tasks**: This means that at least *some* random seed can produce a task that is solvable by the planner. In this case, log will show huge amount of errors but there are at least some valid tests.
+- **Can have occasional solvable tasks**: This means that at least *some* random seed can produce a task that is solvable by the planner. In this case, log will show huge amount of `planner` errors with one or two normal test results mixed in it.
   > Note: however this often implies tricky edge cases so getting zero on these tasks does not necessarily shows that the robot is incapable.
-- **Almost all random seed leads to unsolvable task**: This means that evaluation process will stuck because planner can't calculate valid ground truth
+- **Almost all random seed leads to unsolvable task**: This means that evaluation process will stuck because planner can't calculate valid ground truth. In this case, the model is not actually tested.
   
   > Note: "planner can't calculate valid ground truth" does not mean that the task is unsolvable for human/robot. 
   > It's just that the deterministic solver can't solve it thus we don't have the ground truth for evaluation.
