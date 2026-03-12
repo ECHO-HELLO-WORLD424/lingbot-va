@@ -14,7 +14,7 @@ policy_name=ACT
 task_config=demo_clean
 train_config_name=0
 model_name=0
-start_port=29600
+start_port=29556
 num_gpus=8
 
 task_names=(

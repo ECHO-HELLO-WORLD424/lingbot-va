@@ -1,6 +1,7 @@
 START_PORT=${START_PORT:-29556}
 MASTER_PORT=${MASTER_PORT:-29661}
 LOG_DIR='./logs'
+NUM_GPU=8
 mkdir -p $LOG_DIR
 
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -12,7 +13,7 @@ mkdir -p $save_root
 batch_time=$(date +%Y%m%d_%H%M%S)
 
 
-for i in {0..7}; do  
+for i in {0..($NUM_GPU-1)}; do
     CURRENT_PORT=$((START_PORT + i))
     CURRENT_MASTER_PORT=$((MASTER_PORT + i))
 

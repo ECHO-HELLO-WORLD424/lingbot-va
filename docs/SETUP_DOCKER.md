@@ -60,3 +60,6 @@ This is intended behavior of RoboTwin, you should fix the path everytime you mov
 ```bash
 python /path/to/RoboTwin/script/update_embodiment_config_path.py
 ```
+
+### The Client Freezes Without Error Message
+Check the server starting log. Are clients posting requests to correct **ports**?
