@@ -1,0 +1,4 @@
+[submodule "robotwin"]
+	path = robotwin
+	url = https://github.com/ECHO-HELLO-WORLD424/RoboTwin.git
+	branch = main

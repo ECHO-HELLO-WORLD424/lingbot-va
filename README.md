@@ -98,9 +98,9 @@ In summary:
 sudo apt install libvulkan1 mesa-vulkan-drivers vulkan-tools
 ```
 
-2. 
+2. RoboTwin is included as a git submodule (our fork). If you cloned with `--recurse-submodules` it is already present. Otherwise run:
 ```bash
-git clone https://github.com/RoboTwin-Platform/RoboTwin.git && cd RoboTwin && git checkout 2eeec322
+git submodule update --init --recursive
 ```
 
 3. modify script/requirements.txt 

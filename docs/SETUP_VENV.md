@@ -28,19 +28,18 @@ sudo apt install libvulkan1 mesa-vulkan-drivers vulkan-tools
 
 The eval client imports RoboTwin's `envs` package directly into the lingbot-va Python process,
 so RoboTwin must live at `robotwin/` inside the lingbot-va repo root. The recommended approach
-is a symlink:
+is by using the git submodule, which points to a fork of RoboTwin:
 
 ```bash
-cd /path/to/lingbot-va
-ln -s /path/to/RoboTwin robotwin
+git clone --recurse-submodules https://github.com/Robbyant/lingbot-va.git
 ```
-
-RoboTwin must be pinned to the commit specified in the lingbot-va README:
-
+If you already cloned without `--recurse-submodules`, run:
 ```bash
-cd /path/to/RoboTwin
-git checkout 2eeec322
+git submodule update --init --recursive
 ```
+Then mount your `lingbot-va` directory to the PVC of your docker.
+
+> Note: To let the lingbot-va find RoboTwin installation properly you want to set `ROBOTWIN_ROOT` as the **absolute path** to your RoboTwin installation.
 
 Now, create a virtual env with uv **in the RoboTwin repo**, follow the below setup guide:
 

@@ -10,7 +10,18 @@ The original README omits several non-obvious steps that are required to get the
 
 ## 1. Build the Image and Mount the Project
 This is straight forward. Find [docker file](../Dockerfile), and pass it to whatever build toolkit you use.
-After this please mount your `lingbot-va` and `RoboTwin` project to the PVC of your docker.
+RoboTwin is included as a git submodule under `robotwin/`. Clone the repo with submodules and mount only `lingbot-va`:
+```bash
+git clone --recurse-submodules https://github.com/Robbyant/lingbot-va.git
+```
+If you already cloned without `--recurse-submodules`, run:
+```bash
+git submodule update --init --recursive
+```
+Then mount your `lingbot-va` directory to the PVC of your docker.
+
+> Note: To let the lingbot-va find RoboTwin installation properly you want to set `ROBOTWIN_ROOT` as the **absolute path** to your RoboTwin installation.
+
 
 ## 2. Build cuRobo Manually
 The codebase of cuRobo is not included in the Dockerfile so you need to build it manually. Do it by "`cd`" into a running docker and execute the following:
