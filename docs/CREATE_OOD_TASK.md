@@ -7,6 +7,51 @@ replacements (`handover_then_hang_mug`, `click_bell_then_sort_blocks`, `stamp_th
 
 ---
 
+## 0. TODOs
+
+### Tasks that are abnormal
+
+These tasks are quite abnormal and produces huge amount of error log on evaluation. There are two types of failure pattern:
+
+- **Can have occasional solvable tasks**: This means that at least *some* random seed can produce a task that is solvable by the planner. In this case, log will show huge amount of errors but there are at least some valid tests.
+  > Note: however this often implies tricky edge cases so getting zero on these tasks does not necessarily shows that the robot is incapable.
+- **Almost all random seed leads to unsolvable task**: This means that evaluation process will stuck because planner can't calculate valid ground truth
+  
+  > Note: "planner can't calculate valid ground truth" does not mean that the task is unsolvable for human/robot. 
+  > It's just that the deterministic solver can't solve it thus we don't have the ground truth for evaluation.
+
+```bash
+  "stack_then_scan"                       # Can have occasional solvable tasks
+  "shake_then_place_bottle"               # Almost all random seed leads to unsolvable task
+  "rotate_qrcode_then_scan"               # Can have occasional solvable tasks
+  "open_laptop_then_place_object_inside"  # Can have occasional solvable tasks
+  "dump_bin_then_sort_by_color"           # Almost all random seed leads to unsolvable task
+  "press_stapler_while_holding"           # Can have occasional solvable tasks
+  "unpack_then_rank"                      # Almost all random seed leads to unsolvable task
+  "place_dual_shoes_then_hang_mug"        # Can have occasional solvable tasks
+  "fill_then_shake_then_move_to_pot"      # Can have occasional solvable tasks
+```
+
+### Partially implemented replacement tasks (ready to fix in next phase)
+
+Three replacement tasks were written to substitute the three broken OOD tasks.
+They pass the no-timeout and instruction-generation checks but need spatial layout
+tuning to achieve consistent `plan_success`:
+
+| New task                      | Replaces                      | Status                | Remaining issue                                           |
+| ----------------------------- | ----------------------------- | --------------------- | --------------------------------------------------------- |
+| `handover_then_hang_mug`      | `shake_then_place_bottle`     | No timeouts, instr OK | `plan_success=0` — mug hanging fails with mic on table    |
+| `click_bell_then_sort_blocks` | `dump_bin_then_sort_by_color` | **PASSES** validator  | —                                                         |
+| `stamp_then_stack_bowls`      | `unpack_then_rank`            | No timeouts, instr OK | `plan_success=0` — bowl stacking fails with seal on table |
+
+For `handover_then_hang_mug` and `stamp_then_stack_bowls`, the fix is likely one of:
+
+- Replace the Stage 2 task with something simpler (fewer move steps, single arm)
+- Make Stage 1 objects `is_static=True` after Stage 1 completes so they don't count as obstacles
+- Use `table_height_bias` to give more vertical clearance (see `place_dual_shoes_then_hang_mug`)
+
+---
+
 ## 1. How to Write a New Composed Task
 
 A composed task combines two existing in-distribution tasks into a single `play_once()`.
@@ -278,45 +323,3 @@ cd /path/to/RoboTwin
 python \
     validate_tasks.py --tasks <task_name> --seeds 20 --timeout 180
 ```
-
-## TODOs
-
-### Tasks that are abnormal
-
-These tasks are quite abnormal and produces huge amount of error log on evaluation. There are two types of failure pattern:
-
-- **Can have occasional solvable tasks**: This means that at least *some* random seed can produce a task that is solvable by the planner. In this case, log will show huge amount of errors but there are at least some valid tests
-- **Almost all random seed leads to unsolvable task**: This means that evaluation process will stuck because planner can't calculate valid ground truth
-  
-  > Note: "planner can't calculate valid ground truth" does not mean that the task is unsolvable for human/robot. 
-  > It's just that the deterministic solver can't solve it thus we don't have the ground truth for evaluation.
-
-```bash
-  "stack_then_scan"                       # Can have occasional solvable tasks
-  "shake_then_place_bottle"               # Almost all random seed leads to unsolvable task
-  "rotate_qrcode_then_scan"               # Can have occasional solvable tasks
-  "open_laptop_then_place_object_inside"  # Can have occasional solvable tasks
-  "dump_bin_then_sort_by_color"           # Almost all random seed leads to unsolvable task
-  "press_stapler_while_holding"           # Can have occasional solvable tasks
-  "unpack_then_rank"                      # Almost all random seed leads to unsolvable task
-  "place_dual_shoes_then_hang_mug"        # Can have occasional solvable tasks
-  "fill_then_shake_then_move_to_pot"      # Can have occasional solvable tasks
-```
-
-### Partially implemented replacement tasks (ready to fix in next phase)
-
-Three replacement tasks were written to substitute the three broken OOD tasks.
-They pass the no-timeout and instruction-generation checks but need spatial layout
-tuning to achieve consistent `plan_success`:
-
-| New task                      | Replaces                      | Status                | Remaining issue                                           |
-| ----------------------------- | ----------------------------- | --------------------- | --------------------------------------------------------- |
-| `handover_then_hang_mug`      | `shake_then_place_bottle`     | No timeouts, instr OK | `plan_success=0` — mug hanging fails with mic on table    |
-| `click_bell_then_sort_blocks` | `dump_bin_then_sort_by_color` | **PASSES** validator  | —                                                         |
-| `stamp_then_stack_bowls`      | `unpack_then_rank`            | No timeouts, instr OK | `plan_success=0` — bowl stacking fails with seal on table |
-
-For `handover_then_hang_mug` and `stamp_then_stack_bowls`, the fix is likely one of:
-
-- Replace the Stage 2 task with something simpler (fewer move steps, single arm)
-- Make Stage 1 objects `is_static=True` after Stage 1 completes so they don't count as obstacles
-- Use `table_height_bias` to give more vertical clearance (see `place_dual_shoes_then_hang_mug`)
