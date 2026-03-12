@@ -23,6 +23,42 @@ cd ../../..
 ```
 
 ## 3. Post Installation Steps
+
+### Download the Model
+
+Download the post-trained RoboTwin checkpoint into the lingbot-va repo:
+
+```bash
+huggingface-cli download robbyant/lingbot-va-posttrain-robotwin \
+    --local-dir /path/to/lingbot-va/models/lingbot-va-posttrain-robotwin
+```
+
+### Configure the Model Path
+
+Edit `wan_va/configs/va_robotwin_cfg.py` line 9 and set the path to the downloaded model:
+
+```python
+va_robotwin_cfg.wan22_pretrained_model_name_or_path = \
+    "/path/to/lingbot-va/models/lingbot-va-posttrain-robotwin"
+```
+
+### Set `attn_mode` for Inference
+
+The model's `transformer/config.json` ships with `"attn_mode": "flex"`, which is required for
+training but **causes errors at inference time**. You must change it before running the server:
+
+```bash
+# Open the file and change "attn_mode": "flex"
+# to either "torch" or "flashattn" (if flash-attn is installed)
+nano /path/to/lingbot-va/models/lingbot-va-posttrain-robotwin/transformer/config.json
+```
+
+| Mode      | `attn_mode` value          |
+| --------- | -------------------------- |
+| Training  | `"flex"`                   |
+| Inference | `"torch"` or `"flashattn"` |
+
+## 3. Trouble Shooting
 There are some known issues with *some* building toolkits when using this Dockerfile. Here's the trouble shooting guide:
 
 ### Broken Type Check in OpenCV
@@ -48,18 +84,28 @@ pip install flash-attn --no-build-isolation
 ```
 If this does not work, go to `/path/to/lingbot-va/models/transformer/config.json` and change `attn_mode` to `torch`.
 
-### Infinite Loop about Attribute Error in cuRobo
+### Infinite Looped Error in cuRobo
 Try re-install curobo. If this does not work, delete `/path/to/RoboTwin/envs/curobo`, re-clone it and re-build it with:
 ```bash
 pip install -e . --no-build-isolation
 ```
 
+> Note: If you encounter this when running custom tasks, please test if your task is valid. Refence [related doc](./CREATE_OOD_TASK.md) for more details.
+
 ### Hard Coded Path in RoboTwin installation
-If you migrate your local project to cloud by simplifying copy it, you will probably see file not found errors when using RoboTwin. 
+If you migrate your local project to cloud by simply copy it, you will probably see file not found errors when using RoboTwin. 
 This is intended behavior of RoboTwin, you should fix the path everytime you move the RoboTwin codebase to a new environment by running:
 ```bash
 python /path/to/RoboTwin/script/update_embodiment_config_path.py
 ```
 
 ### The Client Freezes Without Error Message
-Check the server starting log. Are clients posting requests to correct **ports**?
+Check the server starting log. Are clients posting requests to correct **ports**? For example, after launching the server you will probably see this:
+```bash
+root@node007:/data/job/lingbot-va# bash evaluation/robotwin/launch_server_multigpus.sh
+[Task ] GPU: 0 | PORT: 49556 | MASTER_PORT: 49661 | Log: ./logs/server_0_20260312_122839.log
+[Task ] GPU: 1 | PORT: 49557 | MASTER_PORT: 49662 | Log: ./logs/server_1_20260312_122839.log
+All 2 instances have been launched in the background.
+```
+Then your client should listen to `49556` and `49557`, not `49661` or `49662`!
+
