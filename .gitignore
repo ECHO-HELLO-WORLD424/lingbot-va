@@ -11,3 +11,4 @@ __pycache__/
 *.egg*
 .jbeval
 .claude
+*.txt

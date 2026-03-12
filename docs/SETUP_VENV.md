@@ -33,10 +33,13 @@ is by using the git submodule, which points to a fork of RoboTwin:
 ```bash
 git clone --recurse-submodules https://github.com/Robbyant/lingbot-va.git
 ```
+
 If you already cloned without `--recurse-submodules`, run:
+
 ```bash
 git submodule update --init --recursive
 ```
+
 Then mount your `lingbot-va` directory to the PVC of your docker.
 
 > Note: To let the lingbot-va find RoboTwin installation properly you want to set `ROBOTWIN_ROOT` as the **absolute path** to your RoboTwin installation.
@@ -77,7 +80,8 @@ Now, create a virtual env with uv **in the RoboTwin repo**, follow the below set
    ```bash
    uv pip install "git+https://github.com/facebookresearch/pytorch3d.git@stable" --no-build-isolation
    ```
-> **Slow build:** `pytorch3d` can take from 30 minutes to 1h to build on RTX-4090 + i7-14700KF
+   
+   > **Slow build:** `pytorch3d` can take from 30 minutes to 1h to build on RTX-4090 + i7-14700KF
 
 3. run:
    

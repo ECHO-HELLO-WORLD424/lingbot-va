@@ -9,6 +9,7 @@ LingBot-VA is an **Autoregressive Diffusion (AR-Diffusion)** framework that join
 The main Python package containing all model, training, and inference code.
 
 #### `wan_va/modules/model.py`
+
 The heart of the system. Implements `WanTransformer3DModel`, a 3-D video transformer extended with:
 
 - **Dual-stream MoT blocks**: separate transformer streams for video latents and action tokens that share cross-attention with text embeddings but have independent self-attention weights.
@@ -24,13 +25,17 @@ The heart of the system. Implements `WanTransformer3DModel`, a 3-D video transfo
   - `"flashattn"` — FlashAttention2/3, for fast inference.
 
 #### `wan_va/modules/utils.py`
+
 Model loading helpers:
+
 - `load_transformer` — loads `WanTransformer3DModel` from a pretrained checkpoint.
 - `load_vae` / `WanVAEStreamingWrapper` — loads the Wan2.2 VAE; the streaming wrapper encodes/decodes video in temporal chunks to reduce peak VRAM.
 - `load_text_encoder` / `load_tokenizer` — loads the Wan2.2 T5-based text encoder and tokenizer.
 
 #### `wan_va/wan_va_server.py`
+
 The **inference server** (`VA_Server`). Runs on one or more GPUs and:
+
 1. Loads the transformer, VAE, and text encoder.
 2. Listens on a WebSocket port (default `29536`).
 3. On each request: receives camera images + task instruction, encodes them, runs the AR diffusion loop (chunk by chunk), and returns predicted video frames and actions.
@@ -38,32 +43,39 @@ The **inference server** (`VA_Server`). Runs on one or more GPUs and:
 5. Supports **CPU offload** (`enable_offload`) for VAE and text encoder to reduce VRAM usage (~24 GB without offload, ~18 GB with).
 
 #### `wan_va/train.py`
+
 The **post-training (fine-tuning) trainer** (`Trainer`). Uses PyTorch FSDP2 for distributed training:
+
 - Loads a pretrained checkpoint and wraps it with `shard_model` (FSDP2) and optional activation checkpointing (`apply_ac`).
 - Trains with **Flow Matching** loss (`FlowMatchScheduler`) on video latents and action tokens simultaneously.
 - Logs metrics to Weights & Biases.
 - Saves checkpoints every `save_interval` steps in SafeTensors format.
 
 #### `wan_va/dataset/lerobot_latent_dataset.py`
+
 The **dataset loader** (`LatentLeRobotDataset` / `MultiLatentLeRobotDataset`). Reads pre-extracted VAE latents and action sequences from a LeRobot-format dataset:
+
 - Latent `.pth` files contain pre-encoded video features, text embeddings, frame metadata, and action segments.
 - Actions are normalized using quantile statistics (`action_norm_method = 'quantiles'`).
 - Supports multi-dataset loading with parallel initialization via `multiprocessing.Pool`.
 
 #### `wan_va/configs/`
+
 EasyDict-based configuration hierarchy:
 
-| File | Purpose |
-|---|---|
-| `shared_config.py` | Base settings: host/port, dtype (`bfloat16`), patch size `(1,2,2)` |
-| `va_robotwin_cfg.py` | RoboTwin eval config: 256×320 resolution, 30-dim actions, 3 cameras, guidance scales, normalization stats |
-| `va_robotwin_train_cfg.py` | Training overrides: learning rate, batch size, FSDP, W&B |
-| `va_robotwin_i2va.py` | Image-to-video-action (i2va) inference config |
-| `va_franka_cfg.py` / `va_franka_i2va.py` | Franka robot variant configs |
-| `va_demo_cfg.py` / `va_demo_i2va.py` | Demo / quick-test configs |
+| File                                     | Purpose                                                                                                   |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `shared_config.py`                       | Base settings: host/port, dtype (`bfloat16`), patch size `(1,2,2)`                                        |
+| `va_robotwin_cfg.py`                     | RoboTwin eval config: 256×320 resolution, 30-dim actions, 3 cameras, guidance scales, normalization stats |
+| `va_robotwin_train_cfg.py`               | Training overrides: learning rate, batch size, FSDP, W&B                                                  |
+| `va_robotwin_i2va.py`                    | Image-to-video-action (i2va) inference config                                                             |
+| `va_franka_cfg.py` / `va_franka_i2va.py` | Franka robot variant configs                                                                              |
+| `va_demo_cfg.py` / `va_demo_i2va.py`     | Demo / quick-test configs                                                                                 |
 
 #### `wan_va/utils/`
+
 Shared utilities:
+
 - `FlowMatchScheduler` — flow-matching noise schedule with configurable SNR shift.
 - `data_seq_to_patch` — reshapes flat latent sequences into spatial patch grids.
 - `run_async_server_mode` — async WebSocket server loop.
@@ -71,6 +83,7 @@ Shared utilities:
 - `sample_timestep_id` — samples diffusion timesteps during training.
 
 #### `wan_va/distributed/`
+
 - `fsdp.py` — `shard_model` (FSDP2 wrapping with uniform bfloat16 dtype) and `apply_ac` (activation checkpointing per transformer block).
 - `util.py` — `init_distributed`, `_configure_model`, `dist_mean`, `dist_max`.
 
@@ -96,17 +109,17 @@ models/
 
 Utils for launching evaluation servers and clients that connects to the RoboTwin 2.0 simulation environment.
 
-| File | Purpose |
-|---|---|
-| `eval_polict_client_openpi.py` | Main eval loop: instantiates a RoboTwin task env, sends observations to the server, executes returned actions, records success/failure |
-| `websocket_client_policy.py` | `WebsocketClientPolicy` — thin WebSocket client that serializes observations (msgpack-numpy) and deserializes action responses |
-| `launch_server.sh` / `launch_server_multigpus.sh` | Shell scripts to start the inference server (single or multi-GPU) |
-| `launch_client.sh` / `launch_client_multigpus.sh` | Shell scripts to run evaluation for one task or a group of tasks across GPUs |
-| `launch_ood_eval.sh` | Runs the 10 OOD (out-of-distribution) evaluation tasks |
-| `calc_stat.py` | Aggregates per-task success rates from result JSON files |
-| `geometry.py` | Rotation/pose utilities (`euler2quat`, etc.) |
-| `msgpack_numpy.py` | msgpack serialization with numpy array support |
-| `test_render.py` | `Sapien_TEST` — headless SAPIEN renderer for generating starting-state images |
+| File                                              | Purpose                                                                                                                                |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `eval_polict_client_openpi.py`                    | Main eval loop: instantiates a RoboTwin task env, sends observations to the server, executes returned actions, records success/failure |
+| `websocket_client_policy.py`                      | `WebsocketClientPolicy` — thin WebSocket client that serializes observations (msgpack-numpy) and deserializes action responses         |
+| `launch_server.sh` / `launch_server_multigpus.sh` | Shell scripts to start the inference server (single or multi-GPU)                                                                      |
+| `launch_client.sh` / `launch_client_multigpus.sh` | Shell scripts to run evaluation for one task or a group of tasks across GPUs                                                           |
+| `launch_ood_eval.sh`                              | Runs the 10 OOD (out-of-distribution) evaluation tasks                                                                                 |
+| `calc_stat.py`                                    | Aggregates per-task success rates from result JSON files                                                                               |
+| `geometry.py`                                     | Rotation/pose utilities (`euler2quat`, etc.)                                                                                           |
+| `msgpack_numpy.py`                                | msgpack serialization with numpy array support                                                                                         |
+| `test_render.py`                                  | `Sapien_TEST` — headless SAPIEN renderer for generating starting-state images                                                          |
 
 ---
 
@@ -124,19 +137,20 @@ Symlink to the RoboTwin 2.0 repository. Provides:
 
 ### 5. `scripts/` — Utility Scripts
 
-| File | Purpose |
-|---|---|
-| `generate_starting_images.py` | Renders 50 RoboTwin scenes and saves 3-camera PNGs + metadata for the arm-distinction evaluation |
-| `run_arm_eval.py` | Batch i2va evaluation: loads the model once, iterates through all samples, generates video+actions for left-arm and right-arm instruction variants |
-| `run_arm_eval.sh` | Shell wrapper for `run_arm_eval.py` (supports `NGPU=N`) |
-| `run_launch_va_server_sync.sh` | Launches the server in synchronous i2va mode |
-| `run_va_posttrain.sh` | Launches distributed post-training with `NGPU=8` |
+| File                           | Purpose                                                                                                                                            |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `generate_starting_images.py`  | Renders 50 RoboTwin scenes and saves 3-camera PNGs + metadata for the arm-distinction evaluation                                                   |
+| `run_arm_eval.py`              | Batch i2va evaluation: loads the model once, iterates through all samples, generates video+actions for left-arm and right-arm instruction variants |
+| `run_arm_eval.sh`              | Shell wrapper for `run_arm_eval.py` (supports `NGPU=N`)                                                                                            |
+| `run_launch_va_server_sync.sh` | Launches the server in synchronous i2va mode                                                                                                       |
+| `run_va_posttrain.sh`          | Launches distributed post-training with `NGPU=8`                                                                                                   |
 
 ---
 
 ### 6. `robotwin/script/` — RoboTwin Installation Scripts
 
 Scripts used during RoboTwin environment setup (not part of the model):
+
 - `_install.sh` — installs RoboTwin Python dependencies.
 - `_download_assets.sh` — downloads simulation assets.
 - `requirements.txt` — RoboTwin-specific pip requirements.
@@ -145,13 +159,14 @@ Scripts used during RoboTwin environment setup (not part of the model):
 
 ### 7. `docs/` — Documentation
 
-| File | Purpose |
-|---|---|
-| `SETUP_DOCKER.md` | Docker-based installation guide (recommended) |
-| `SETUP_LOCAL.md` | Local installation guide |
-| `EVAL_TASKS.md` | List of the 50 standard RoboTwin evaluation tasks |
-| `CREATE_OOD_TASK.md` | Guide for adding new OOD evaluation tasks |
-| `ARCHITECTURE.md` | This file |
+| File                 | Purpose                                             |
+| -------------------- | --------------------------------------------------- |
+| `SETUP_DOCKER.md`    | Docker-based installation guide (recommended)       |
+| `SETUP_LOCAL.md`     | Local installation guide                            |
+| `EVAL_TASKS.md`      | List of the 50 standard RoboTwin evaluation tasks   |
+| `CREATE_OOD_TASK.md` | Guide for adding new OOD evaluation tasks           |
+| `RUN_EVAL.md`        | Guide for evaluating `lingbot-va` with RoboTwin 2.0 |
+| `ARCHITECTURE.md`    | This file                                           |
 
 ---
 
@@ -159,14 +174,14 @@ Scripts used during RoboTwin environment setup (not part of the model):
 
 All actions are 30-dimensional, structured as:
 
-| Dims | Description |
-|---|---|
-| 0–6 | Left arm end-effector pose (xyz + quaternion) |
-| 7–13 | Right arm end-effector pose (xyz + quaternion) |
-| 14–20 | Left arm joint angles (7 DOF) |
-| 21–27 | Right arm joint angles (7 DOF) |
-| 28 | Left gripper (open/close) |
-| 29 | Right gripper (open/close) |
+| Dims  | Description                                    |
+| ----- | ---------------------------------------------- |
+| 0–6   | Left arm end-effector pose (xyz + quaternion)  |
+| 7–13  | Right arm end-effector pose (xyz + quaternion) |
+| 14–20 | Left arm joint angles (7 DOF)                  |
+| 21–27 | Right arm joint angles (7 DOF)                 |
+| 28    | Left gripper (open/close)                      |
+| 29    | Right gripper (open/close)                     |
 
 During RoboTwin evaluation, only the EEF + gripper channels (dims 0–13, 28–29) are used (`used_action_channel_ids`).
 

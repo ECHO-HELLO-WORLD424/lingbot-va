@@ -15,11 +15,11 @@ The pattern is always: **Stage 1 objects in front area → Stage 2 objects in ba
 
 ### File locations
 
-| Artifact | Path |
-|---|---|
-| Task class | `robotwin/envs/<task_name>.py` |
+| Artifact         | Path                                                     |
+| ---------------- | -------------------------------------------------------- |
+| Task class       | `robotwin/envs/<task_name>.py`                           |
 | Instruction JSON | `robotwin/description/task_instruction/<task_name>.json` |
-| Step limit entry | `robotwin/task_config/_eval_step_limit.yml` |
+| Step limit entry | `robotwin/task_config/_eval_step_limit.yml`              |
 
 The class name must exactly match the filename (no `.py`).
 
@@ -89,6 +89,7 @@ an empty list, which crashes the eval with `IndexError: list index out of range`
 ### Step limit
 
 Add to `robotwin/task_config/_eval_step_limit.yml`:
+
 ```yaml
 stage1_then_stage2: 1500   # sum of both base task limits + ~200 buffer
 ```
@@ -107,22 +108,24 @@ so failure rates multiply.
 
 ### Specific failure modes observed
 
-| Failure | Cause | Example task |
-|---|---|---|
-| `plan_success = False` on every seed | Too many objects; straight-line paths always collide | `handover_then_hang_mug` with mic + mug + rack all present |
-| Infinite hang during `play_once` | Planner called in a loop with no timeout; never returns | `dump_bin_then_sort_by_color`, `unpack_then_rank` |
-| Infinite hang during `load_actors` | `while` loop sampling random poses can't satisfy constraints | `ylim_prop=True` with all-positive ylim; `while abs(x) < 0.15` with narrow xlim |
-| `AssertionError: target_pose cannot be None` | `choose_grasp_pose` returns `None` when no contact point is reachable | `shake_then_place_bottle` |
-| `IndexError` in instruction generation | Info dict keys don't match JSON placeholders | `shake_then_place_bottle` (after the planner issue) |
+| Failure                                      | Cause                                                                 | Example task                                                                    |
+| -------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `plan_success = False` on every seed         | Too many objects; straight-line paths always collide                  | `handover_then_hang_mug` with mic + mug + rack all present                      |
+| Infinite hang during `play_once`             | Planner called in a loop with no timeout; never returns               | `dump_bin_then_sort_by_color`, `unpack_then_rank`                               |
+| Infinite hang during `load_actors`           | `while` loop sampling random poses can't satisfy constraints          | `ylim_prop=True` with all-positive ylim; `while abs(x) < 0.15` with narrow xlim |
+| `AssertionError: target_pose cannot be None` | `choose_grasp_pose` returns `None` when no contact point is reachable | `shake_then_place_bottle`                                                       |
+| `IndexError` in instruction generation       | Info dict keys don't match JSON placeholders                          | `shake_then_place_bottle` (after the planner issue)                             |
 
 ### Root cause of `together_move_to_pose` hangs
 
 `_base_task.py:850` has an unbounded `while` loop:
+
 ```python
 while now_left_id < left_n_step or now_right_id < right_n_step:
     ...
     self.scene.step()
 ```
+
 If the planner returns a path but the simulation physics diverges (objects flying, joints
 locking), the counters never reach `n_step` and the process hangs forever. There is no
 timeout or iteration cap.
@@ -163,14 +166,14 @@ python \
 
 ### What it checks per seed
 
-| Column | Meaning |
-|---|---|
-| `setup` | `setup_demo()` + `load_actors()` completed without hanging |
-| `play` | `play_once()` returned without exception |
-| `plan` | `env.plan_success == True` after `play_once()` |
-| `succ` | `check_success()` returned `True` |
+| Column  | Meaning                                                                |
+| ------- | ---------------------------------------------------------------------- |
+| `setup` | `setup_demo()` + `load_actors()` completed without hanging             |
+| `play`  | `play_once()` returned without exception                               |
+| `plan`  | `env.plan_success == True` after `play_once()`                         |
+| `succ`  | `check_success()` returned `True`                                      |
 | `instr` | `generate_episode_descriptions()` returned non-empty seen instructions |
-| `⏱` | Process killed after timeout — infinite loop detected |
+| `⏱`     | Process killed after timeout — infinite loop detected                  |
 
 ### Pass criteria (built into the script)
 
@@ -235,13 +238,17 @@ others use dynamic import. The eval script imports tasks by name via `importlib`
 ### Where the eval picks up new tasks
 
 The OOD eval launch script is:
+
 ```
 lingbot-va/evaluation/robotwin/launch_ood_eval.sh
 ```
+
 Add the new task name to the task list in that script. The eval client is:
+
 ```
 lingbot-va/evaluation/robotwin/eval_polict_client_openpi.py
 ```
+
 Key function: `eval_policy()` — it calls `setup_demo` + `play_once` in a loop, skipping
 seeds where `plan_success=False` or an exception is raised, until `test_num` successes
 are collected.
@@ -265,6 +272,7 @@ RoboTwin/validate_tasks.py
 ```
 
 Run from the `RoboTwin/` directory with the `lingbot-va` venv (which has SAPIEN):
+
 ```bash
 cd /path/to/RoboTwin
 python \
@@ -276,11 +284,12 @@ python \
 ### Tasks that are abnormal
 
 These tasks are quite abnormal and produces huge amount of error log on evaluation. There are two types of failure pattern:
-- **Can have occasional solvable tasks**: This means that at least *some* random seed can produce a task that is solvable by the planner
-- **Almost all random seed leads to unsolvable task**: This means that GPU will stuck because planner can't calculate valid ground truth
-> Note: "planner can't calculate valid ground truth" does not mean that the task is unsolvable for human/robot. 
-> It's just that the deterministic solver can't solve it thus we don't have the ground truth for evaluation.
 
+- **Can have occasional solvable tasks**: This means that at least *some* random seed can produce a task that is solvable by the planner. In this case, log will show huge amount of errors but there are at least some valid tests
+- **Almost all random seed leads to unsolvable task**: This means that evaluation process will stuck because planner can't calculate valid ground truth
+  
+  > Note: "planner can't calculate valid ground truth" does not mean that the task is unsolvable for human/robot. 
+  > It's just that the deterministic solver can't solve it thus we don't have the ground truth for evaluation.
 
 ```bash
   "stack_then_scan"                       # Can have occasional solvable tasks
@@ -300,13 +309,14 @@ Three replacement tasks were written to substitute the three broken OOD tasks.
 They pass the no-timeout and instruction-generation checks but need spatial layout
 tuning to achieve consistent `plan_success`:
 
-| New task | Replaces | Status | Remaining issue |
-|---|---|---|---|
-| `handover_then_hang_mug` | `shake_then_place_bottle` | No timeouts, instr OK | `plan_success=0` — mug hanging fails with mic on table |
-| `click_bell_then_sort_blocks` | `dump_bin_then_sort_by_color` | **PASSES** validator | — |
-| `stamp_then_stack_bowls` | `unpack_then_rank` | No timeouts, instr OK | `plan_success=0` — bowl stacking fails with seal on table |
+| New task                      | Replaces                      | Status                | Remaining issue                                           |
+| ----------------------------- | ----------------------------- | --------------------- | --------------------------------------------------------- |
+| `handover_then_hang_mug`      | `shake_then_place_bottle`     | No timeouts, instr OK | `plan_success=0` — mug hanging fails with mic on table    |
+| `click_bell_then_sort_blocks` | `dump_bin_then_sort_by_color` | **PASSES** validator  | —                                                         |
+| `stamp_then_stack_bowls`      | `unpack_then_rank`            | No timeouts, instr OK | `plan_success=0` — bowl stacking fails with seal on table |
 
 For `handover_then_hang_mug` and `stamp_then_stack_bowls`, the fix is likely one of:
+
 - Replace the Stage 2 task with something simpler (fewer move steps, single arm)
 - Make Stage 1 objects `is_static=True` after Stage 1 completes so they don't count as obstacles
 - Use `table_height_bias` to give more vertical clearance (see `place_dual_shoes_then_hang_mug`)
