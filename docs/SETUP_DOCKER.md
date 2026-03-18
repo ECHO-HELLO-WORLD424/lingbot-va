@@ -75,6 +75,20 @@ nano /path/to/lingbot-va/models/lingbot-va-posttrain-robotwin/transformer/config
 | Training  | `"flex"`                   |
 | Inference | `"torch"` or `"flashattn"` |
 
+### Download RoboTwin Assets
+You need to download RoboTwin Assets before using any of them. `cd` to your RoboTwin installation and run:
+
+```bash
+bash script/_download_assets.sh
+```
+
+### Audit Hard-Coded Path In RoboTwin Installation:
+You might see file not found errors when using RoboTwin. This is a common issue, you should fix the path everytime you move the RoboTwin codebase to a new environment by running:
+
+```bash
+python /path/to/RoboTwin/script/update_embodiment_config_path.py
+```
+
 ## 3. Trouble Shooting
 
 There are some known issues with *some* building toolkits when using this Dockerfile. Here's the trouble shooting guide:
